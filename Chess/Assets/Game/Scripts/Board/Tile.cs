@@ -22,7 +22,7 @@ public class Tile : MonoBehaviourPun
     void OnMouseOver(){
 
         this.gameObject.layer = LayerMask.NameToLayer("Hover");
-        this.gameObject.GetComponent<SpriteRenderer>().color = Color.yellow;
+        this.gameObject.GetComponent<SpriteRenderer>().color = Color.red;
         chessboard.changeHover = new Vector2Int(int.Parse(this.gameObject.name[2].ToString()), int.Parse(this.gameObject.name[7].ToString()));
         Debug.Log(chessboard.changeHover);
     }
