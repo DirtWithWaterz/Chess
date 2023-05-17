@@ -26,6 +26,7 @@ public class LobbyManager : MonoBehaviourPun
             p2.text = "None";
         } else{
             photonView.RPC(nameof(UpdateP2Text), RpcTarget.AllBufferedViaServer, PhotonNetwork.LocalPlayer.NickName);
+            _startButton.SetActive(false);
         }
         
         

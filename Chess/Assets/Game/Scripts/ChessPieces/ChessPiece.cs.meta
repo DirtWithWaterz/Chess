@@ -3,7 +3,8 @@ guid: cb88865f6c82302449d7a9766c18d45d
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - shadowSprite: {fileID: 21300000, guid: 23bddf66bad50e845bff7b17df3202e9, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

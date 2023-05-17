@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 7066009438852114572}
   - component: {fileID: 8728341775970626029}
   - component: {fileID: 2661286804471792678}
+  - component: {fileID: -6885053040170773068}
+  - component: {fileID: 180176390813006633}
   m_Layer: 0
   m_Name: Pawn_1
   m_TagString: Untagged
@@ -97,7 +99,50 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17a365e4a8aecaa43bd4d02471b3b8c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  chessboard: {fileID: 0}
   team: 0
   currentX: 0
   currentY: 0
+  currentPos: {x: 0, y: 0}
   type: 0
+  desiredPosition: {x: 0, y: 0, z: 0}
+  positionOffset: 0.1
+--- !u!114 &-6885053040170773068
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2209616316715734646}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents:
+  - {fileID: 180176390813006633}
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
+--- !u!114 &180176390813006633
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2209616316715734646}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 627855c7f81362d41938ffe0b1475957, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SynchronizePosition: 1
+  m_SynchronizeRotation: 0
+  m_SynchronizeScale: 1
+  m_UseLocal: 1
