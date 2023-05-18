@@ -76,13 +76,13 @@ public class ChessPiece : MonoBehaviourPun
         return r;
     }
 
-    public virtual void SetPosition(Vector3 position, bool force = false){
+    public void SetPosition(Vector3 position, bool force = false){
 
         desiredPosition = position + (PhotonNetwork.LocalPlayer.IsMasterClient ? (Vector3.up * positionOffset) : (Vector3.down * positionOffset));
         if(force)
             transform.position = desiredPosition;
     }
-    public virtual void SetScale(Vector3 scale, bool force = false){
+    public void SetScale(Vector3 scale, bool force = false){
 
         desiredScale = scale;
         if(force)

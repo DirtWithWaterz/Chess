@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 3811723753381179094}
   - component: {fileID: 5244713298076200616}
   - component: {fileID: 7157247521295595153}
-  - component: {fileID: 8120245875260298405}
-  - component: {fileID: 281780711313558643}
+  - component: {fileID: 350860391962268016}
+  - component: {fileID: -6905306701985288673}
   m_Layer: 0
   m_Name: Rook_1
   m_TagString: Untagged
@@ -107,7 +107,7 @@ MonoBehaviour:
   type: 0
   desiredPosition: {x: 0, y: 0, z: 0}
   positionOffset: 0.1
---- !u!114 &8120245875260298405
+--- !u!114 &350860391962268016
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -126,11 +126,11 @@ MonoBehaviour:
   OwnershipTransfer: 0
   observableSearch: 2
   ObservedComponents:
-  - {fileID: 281780711313558643}
+  - {fileID: -6905306701985288673}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
---- !u!114 &281780711313558643
+--- !u!114 &-6905306701985288673
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

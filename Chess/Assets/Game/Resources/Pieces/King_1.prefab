@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 1069166281813697207}
   - component: {fileID: 756661658413225146}
   - component: {fileID: 5261169523334463299}
-  - component: {fileID: -8391418778301965668}
-  - component: {fileID: 7006648564575782966}
+  - component: {fileID: -4029818348285305778}
+  - component: {fileID: -4751290855732367119}
   m_Layer: 0
   m_Name: King_1
   m_TagString: Untagged
@@ -107,7 +107,7 @@ MonoBehaviour:
   type: 0
   desiredPosition: {x: 0, y: 0, z: 0}
   positionOffset: 0.1
---- !u!114 &-8391418778301965668
+--- !u!114 &-4029818348285305778
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -126,11 +126,11 @@ MonoBehaviour:
   OwnershipTransfer: 0
   observableSearch: 2
   ObservedComponents:
-  - {fileID: 7006648564575782966}
+  - {fileID: -4751290855732367119}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
---- !u!114 &7006648564575782966
+--- !u!114 &-4751290855732367119
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

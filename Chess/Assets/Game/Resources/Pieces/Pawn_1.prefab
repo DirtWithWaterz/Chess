@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 7066009438852114572}
   - component: {fileID: 8728341775970626029}
   - component: {fileID: 2661286804471792678}
-  - component: {fileID: -6885053040170773068}
-  - component: {fileID: 180176390813006633}
+  - component: {fileID: -807874361710919160}
+  - component: {fileID: 1409022855271168899}
   m_Layer: 0
   m_Name: Pawn_1
   m_TagString: Untagged
@@ -107,7 +107,7 @@ MonoBehaviour:
   type: 0
   desiredPosition: {x: 0, y: 0, z: 0}
   positionOffset: 0.1
---- !u!114 &-6885053040170773068
+--- !u!114 &-807874361710919160
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -126,11 +126,11 @@ MonoBehaviour:
   OwnershipTransfer: 0
   observableSearch: 2
   ObservedComponents:
-  - {fileID: 180176390813006633}
+  - {fileID: 1409022855271168899}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
---- !u!114 &180176390813006633
+--- !u!114 &1409022855271168899
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

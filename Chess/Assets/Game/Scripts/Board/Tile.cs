@@ -67,7 +67,7 @@ public class Tile : MonoBehaviourPun
         if(chessboard.chessPieces[pos.x, pos.y] != null){
             Debug.Log("There is a chess piece here!");
             //is it our turn?
-            if((chessboard.chessPieces[pos.x, pos.y].team == 0 && chessboard.isWhiteTurn) || (chessboard.chessPieces[pos.x, pos.y].team == 1 && !chessboard.isWhiteTurn)){
+            if((chessboard.chessPieces[pos.x, pos.y].team == 0 && chessboard.isWhiteTurn && PhotonNetwork.LocalPlayer.IsMasterClient) || (chessboard.chessPieces[pos.x, pos.y].team == 1 && !chessboard.isWhiteTurn && !PhotonNetwork.LocalPlayer.IsMasterClient)){
 
                 chessboard.draggingPiece = chessboard.chessPieces[pos.x, pos.y];
 

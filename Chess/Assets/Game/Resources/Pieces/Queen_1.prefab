@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 8862531369322274875}
   - component: {fileID: 8724334778978753703}
   - component: {fileID: 46012595335291937}
-  - component: {fileID: -7543043840944926129}
-  - component: {fileID: 7331575501993996679}
+  - component: {fileID: 1574455072201084673}
+  - component: {fileID: -3177238429256456837}
   m_Layer: 0
   m_Name: Queen_1
   m_TagString: Untagged
@@ -107,7 +107,7 @@ MonoBehaviour:
   type: 0
   desiredPosition: {x: 0, y: 0, z: 0}
   positionOffset: 0.1
---- !u!114 &-7543043840944926129
+--- !u!114 &1574455072201084673
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -126,11 +126,11 @@ MonoBehaviour:
   OwnershipTransfer: 0
   observableSearch: 2
   ObservedComponents:
-  - {fileID: 7331575501993996679}
+  - {fileID: -3177238429256456837}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
---- !u!114 &7331575501993996679
+--- !u!114 &-3177238429256456837
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

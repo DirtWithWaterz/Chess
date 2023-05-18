@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 5794067273629289822}
   - component: {fileID: 5422590442379291740}
   - component: {fileID: 7873516348589109420}
-  - component: {fileID: 5796577422138235830}
-  - component: {fileID: 2808144300839035863}
+  - component: {fileID: 6430419267788052683}
+  - component: {fileID: 1759235408861781221}
   m_Layer: 0
   m_Name: Knight_1
   m_TagString: Untagged
@@ -107,7 +107,7 @@ MonoBehaviour:
   type: 0
   desiredPosition: {x: 0, y: 0, z: 0}
   positionOffset: 0.1
---- !u!114 &5796577422138235830
+--- !u!114 &6430419267788052683
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -126,11 +126,11 @@ MonoBehaviour:
   OwnershipTransfer: 0
   observableSearch: 2
   ObservedComponents:
-  - {fileID: 2808144300839035863}
+  - {fileID: 1759235408861781221}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
---- !u!114 &2808144300839035863
+--- !u!114 &1759235408861781221
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

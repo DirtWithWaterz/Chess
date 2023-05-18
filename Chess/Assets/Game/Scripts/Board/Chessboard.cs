@@ -102,22 +102,14 @@ public class Chessboard : MonoBehaviourPun
         GenerateShadow();
     }
 
-    private void GenerateShadow()
-    {
-        shadow = new GameObject("Shadow");
-        shadow.AddComponent<SpriteRenderer>();
-        shadow.transform.parent = transform;
-        shadow.transform.position = Vector3.zero;
-        shadow.transform.localScale = Vector3.one * 5;
-        shadow.GetComponent<SpriteRenderer>().sprite = shadowSprite;
-        shadow.GetComponent<SpriteRenderer>().enabled = false;
-    }
-
     private void Update()
     {
         if(!currentCamera)
         {
             currentCamera = Camera.main;
+            if(!PhotonNetwork.LocalPlayer.IsMasterClient)
+                currentCamera.transform.rotation = Quaternion.Euler(new Vector3(0, 0, 180));
+
             return;
         }
         mousePos = currentCamera.ScreenToWorldPoint(Input.mousePosition);
@@ -138,6 +130,18 @@ public class Chessboard : MonoBehaviourPun
                 Time.deltaTime * 30
             );
         } else{shadow.GetComponent<SpriteRenderer>().enabled = false;}
+    }
+
+    // Generate the shadow
+    private void GenerateShadow()
+    {
+        shadow = new GameObject("Shadow");
+        shadow.AddComponent<SpriteRenderer>();
+        shadow.transform.parent = transform;
+        shadow.transform.position = Vector3.zero;
+        shadow.transform.localScale = Vector3.one * 5;
+        shadow.GetComponent<SpriteRenderer>().sprite = shadowSprite;
+        shadow.GetComponent<SpriteRenderer>().enabled = false;
     }
 
     // Generate the board
@@ -218,9 +222,9 @@ public class Chessboard : MonoBehaviourPun
     private ChessPiece SpawnSinglePiece(ChessPieceType type, int team){
         ChessPiece cp = null;
         if(team == 0){
-            cp = Instantiate(whitePrefabs[(int)type - 1], transform).GetComponent<ChessPiece>();
+            cp = PhotonNetwork.Instantiate("Pieces/" + whitePrefabs[(int)type - 1].name, transform.position, Quaternion.identity).GetComponent<ChessPiece>();
         } else{
-            cp = Instantiate(blackPrefabs[(int)type - 1], transform).GetComponent<ChessPiece>();
+            cp = PhotonNetwork.Instantiate("Pieces/" + blackPrefabs[(int)type - 1].name, transform.position, Quaternion.identity).GetComponent<ChessPiece>();
         }
 
         cp.type = type;
@@ -297,24 +301,37 @@ public class Chessboard : MonoBehaviourPun
             for(int y = 0; y < TILE_COUNT_Y; y++){
 
                 if(chessPieces[x,y] != null)
-                    Destroy(chessPieces[x,y].gameObject);
+                    PhotonNetwork.Destroy(chessPieces[x,y].gameObject);
                 
                 chessPieces[x,y] = null;
             }
         }
 
         for(int i = 0; i < deadWhites.Count; i++)
-            Destroy(deadWhites[i].gameObject);
+            PhotonNetwork.Destroy(deadWhites[i].gameObject);
         for(int i = 0; i < deadBlacks.Count; i++)
-            Destroy(deadBlacks[i].gameObject);
+            PhotonNetwork.Destroy(deadBlacks[i].gameObject);
         
-        deadWhites.Clear();
-        deadBlacks.Clear();
+        // deadWhites.Clear();
+        // deadBlacks.Clear();
 
-        SpawnAllPieces();
-        PositionAllPieces();
+        // SpawnAllPieces();
+        // PositionAllPieces();
+        photonView.RPC(nameof(ClearDead), RpcTarget.AllViaServer, photonView.ViewID);
         iwt = true;
     }
+    [PunRPC]
+    public void ClearDead(int viewID){
+
+        PhotonView view = PhotonView.Find(viewID);
+        Chessboard cb = view.GetComponent<Chessboard>();
+        cb.deadWhites.Clear();
+        cb.deadBlacks.Clear();
+        cb.SpawnAllPieces();
+        cb.PositionAllPieces();
+    }
+
+
     public void OnExitButton(){
 
         PhotonNetwork.Disconnect();
