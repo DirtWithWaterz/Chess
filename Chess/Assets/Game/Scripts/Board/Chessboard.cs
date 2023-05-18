@@ -96,10 +96,10 @@ public class Chessboard : MonoBehaviourPun
         iwt = true;
 
         GenerateAllTiles(tileSize, TILE_COUNT_X, TILE_COUNT_Y);
-
-        SpawnAllPieces();
-        PositionAllPieces();
         GenerateShadow();
+        
+        if(PhotonNetwork.LocalPlayer.IsMasterClient){SpawnAllPieces();}
+        PositionAllPieces();
     }
 
     private void Update()
@@ -301,37 +301,24 @@ public class Chessboard : MonoBehaviourPun
             for(int y = 0; y < TILE_COUNT_Y; y++){
 
                 if(chessPieces[x,y] != null)
-                    PhotonNetwork.Destroy(chessPieces[x,y].gameObject);
+                    Destroy(chessPieces[x,y].gameObject);
                 
                 chessPieces[x,y] = null;
             }
         }
 
         for(int i = 0; i < deadWhites.Count; i++)
-            PhotonNetwork.Destroy(deadWhites[i].gameObject);
+            Destroy(deadWhites[i].gameObject);
         for(int i = 0; i < deadBlacks.Count; i++)
-            PhotonNetwork.Destroy(deadBlacks[i].gameObject);
+            Destroy(deadBlacks[i].gameObject);
         
-        // deadWhites.Clear();
-        // deadBlacks.Clear();
+        deadWhites.Clear();
+        deadBlacks.Clear();
 
-        // SpawnAllPieces();
-        // PositionAllPieces();
-        photonView.RPC(nameof(ClearDead), RpcTarget.AllViaServer, photonView.ViewID);
+        SpawnAllPieces();
+        PositionAllPieces();
         iwt = true;
     }
-    [PunRPC]
-    public void ClearDead(int viewID){
-
-        PhotonView view = PhotonView.Find(viewID);
-        Chessboard cb = view.GetComponent<Chessboard>();
-        cb.deadWhites.Clear();
-        cb.deadBlacks.Clear();
-        cb.SpawnAllPieces();
-        cb.PositionAllPieces();
-    }
-
-
     public void OnExitButton(){
 
         PhotonNetwork.Disconnect();
