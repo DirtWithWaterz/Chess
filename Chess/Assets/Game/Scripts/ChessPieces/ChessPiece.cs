@@ -14,7 +14,7 @@ public enum ChessPieceType
     King = 6
 }
 
-public class ChessPiece : MonoBehaviourPun
+public class ChessPiece : MonoBehaviour
 {
     public Chessboard chessboard;
     public int team;

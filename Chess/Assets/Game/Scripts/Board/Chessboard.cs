@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
@@ -98,7 +99,15 @@ public class Chessboard : MonoBehaviourPun
         GenerateAllTiles(tileSize, TILE_COUNT_X, TILE_COUNT_Y);
         GenerateShadow();
         
+        chessPieces = new ChessPiece[TILE_COUNT_X, TILE_COUNT_Y];
         if(PhotonNetwork.LocalPlayer.IsMasterClient){SpawnAllPieces();}
+        if(!PhotonNetwork.LocalPlayer.IsMasterClient){StartCoroutine(SetupClient());}
+    }
+    public bool masterSetupComplete = false;
+    private IEnumerator SetupClient(){
+
+        yield return new WaitUntil(() => masterSetupComplete);
+
         PositionAllPieces();
     }
 
@@ -191,35 +200,42 @@ public class Chessboard : MonoBehaviourPun
     // Spawning the pieces
     private void SpawnAllPieces(){
 
-        chessPieces = new ChessPiece[TILE_COUNT_X, TILE_COUNT_Y];
-
         int whiteTeam = 0, blackTeam = 1;
+        // the names are created as follows
+        // first int = white(0) or black(1)
+        // second int = Bishop(1) or King(2) or Knight(3) or Pawn(4) or Queen(5) or Rook(6)
+        // third int = instance number, ie. the first white rook placed is 0, the second is 1, then 2, 3, etc.
+        // example: white bishop of the second instance = 011
 
         // White team
-        chessPieces[0,0] = SpawnSinglePiece(ChessPieceType.Rook, whiteTeam);
-        chessPieces[1,0] = SpawnSinglePiece(ChessPieceType.Knight, whiteTeam);
-        chessPieces[2,0] = SpawnSinglePiece(ChessPieceType.Bishop, whiteTeam);
-        chessPieces[3,0] = SpawnSinglePiece(ChessPieceType.Queen, whiteTeam);
-        chessPieces[4,0] = SpawnSinglePiece(ChessPieceType.King, whiteTeam);
-        chessPieces[5,0] = SpawnSinglePiece(ChessPieceType.Bishop, whiteTeam);
-        chessPieces[6,0] = SpawnSinglePiece(ChessPieceType.Knight, whiteTeam);
-        chessPieces[7,0] = SpawnSinglePiece(ChessPieceType.Rook, whiteTeam);
+        chessPieces[0,0] = SpawnSinglePiece(ChessPieceType.Rook, whiteTeam, "060", 0, 0);
+        chessPieces[1,0] = SpawnSinglePiece(ChessPieceType.Knight, whiteTeam, "030", 1, 0);
+        chessPieces[2,0] = SpawnSinglePiece(ChessPieceType.Bishop, whiteTeam, "010", 2, 0);
+        chessPieces[3,0] = SpawnSinglePiece(ChessPieceType.Queen, whiteTeam, "050", 3, 0);
+        chessPieces[4,0] = SpawnSinglePiece(ChessPieceType.King, whiteTeam, "020", 4, 0);
+        chessPieces[5,0] = SpawnSinglePiece(ChessPieceType.Bishop, whiteTeam, "011", 5, 0);
+        chessPieces[6,0] = SpawnSinglePiece(ChessPieceType.Knight, whiteTeam, "031", 6, 0);
+        chessPieces[7,0] = SpawnSinglePiece(ChessPieceType.Rook, whiteTeam, "061", 7, 0);
         for(int i = 0; i < TILE_COUNT_X; i++)
-            chessPieces[i,1] = SpawnSinglePiece(ChessPieceType.Pawn, whiteTeam);
+            chessPieces[i,1] = SpawnSinglePiece(ChessPieceType.Pawn, whiteTeam, $"04{i}", i, 1);
 
         // Black team
-        chessPieces[0,7] = SpawnSinglePiece(ChessPieceType.Rook, blackTeam);
-        chessPieces[1,7] = SpawnSinglePiece(ChessPieceType.Knight, blackTeam);
-        chessPieces[2,7] = SpawnSinglePiece(ChessPieceType.Bishop, blackTeam);
-        chessPieces[3,7] = SpawnSinglePiece(ChessPieceType.Queen, blackTeam);
-        chessPieces[4,7] = SpawnSinglePiece(ChessPieceType.King, blackTeam);
-        chessPieces[5,7] = SpawnSinglePiece(ChessPieceType.Bishop, blackTeam);
-        chessPieces[6,7] = SpawnSinglePiece(ChessPieceType.Knight, blackTeam);
-        chessPieces[7,7] = SpawnSinglePiece(ChessPieceType.Rook, blackTeam);
+        chessPieces[0,7] = SpawnSinglePiece(ChessPieceType.Rook, blackTeam, "160", 0, 7);
+        chessPieces[1,7] = SpawnSinglePiece(ChessPieceType.Knight, blackTeam, "130", 1, 7);
+        chessPieces[2,7] = SpawnSinglePiece(ChessPieceType.Bishop, blackTeam, "110", 2, 7);
+        chessPieces[3,7] = SpawnSinglePiece(ChessPieceType.Queen, blackTeam, "150", 3, 7);
+        chessPieces[4,7] = SpawnSinglePiece(ChessPieceType.King, blackTeam, "120", 4, 7);
+        chessPieces[5,7] = SpawnSinglePiece(ChessPieceType.Bishop, blackTeam, "111", 5, 7);
+        chessPieces[6,7] = SpawnSinglePiece(ChessPieceType.Knight, blackTeam, "131", 6, 7);
+        chessPieces[7,7] = SpawnSinglePiece(ChessPieceType.Rook, blackTeam, "161", 7, 7);
         for(int i = 0; i < TILE_COUNT_X; i++)
-            chessPieces[i,6] = SpawnSinglePiece(ChessPieceType.Pawn, blackTeam);
+            chessPieces[i,6] = SpawnSinglePiece(ChessPieceType.Pawn, blackTeam, $"14{i}", i, 6);
+
+        PositionAllPieces();
+        photonView.RPC(nameof(CompleteMasterSetup), RpcTarget.AllBufferedViaServer);
+
     }
-    private ChessPiece SpawnSinglePiece(ChessPieceType type, int team){
+    private ChessPiece SpawnSinglePiece(ChessPieceType type, int team, string name, int x, int y){
         ChessPiece cp = null;
         if(team == 0){
             cp = PhotonNetwork.Instantiate("Pieces/" + whitePrefabs[(int)type - 1].name, transform.position, Quaternion.identity).GetComponent<ChessPiece>();
@@ -227,10 +243,29 @@ public class Chessboard : MonoBehaviourPun
             cp = PhotonNetwork.Instantiate("Pieces/" + blackPrefabs[(int)type - 1].name, transform.position, Quaternion.identity).GetComponent<ChessPiece>();
         }
 
-        cp.type = type;
-        cp.team = team;
+        int viewID = cp.gameObject.GetComponent<PhotonView>().ViewID;
+        photonView.RPC(nameof(NamePiece), RpcTarget.AllBufferedViaServer, viewID, name, (int)type, team, x, y);
 
         return cp;
+    }
+
+    [PunRPC]
+    public void CompleteMasterSetup(){
+
+        Chessboard cb = GameObject.Find("Chessboard").GetComponent<Chessboard>();
+
+        cb.masterSetupComplete = true;
+    }
+
+    [PunRPC]
+    public void NamePiece(int viewID, string name, int type, int team, int x, int y){
+
+        PhotonView view = PhotonView.Find(viewID);
+        view.gameObject.name = name;
+
+        chessPieces[x,y] = view.GetComponent<ChessPiece>();
+        view.GetComponent<ChessPiece>().team = team;
+        view.GetComponent<ChessPiece>().type = type == 1 ? ChessPieceType.Pawn : type == 2 ? ChessPieceType.Rook : type == 3 ? ChessPieceType.Knight : type == 4 ? ChessPieceType.Bishop : type == 5 ? ChessPieceType.Queen : type == 6 ? ChessPieceType.King : ChessPieceType.None;
     }
     
     // Positioning
