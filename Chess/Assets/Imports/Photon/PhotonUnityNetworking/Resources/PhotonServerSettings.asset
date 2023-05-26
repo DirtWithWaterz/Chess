@@ -48,6 +48,14 @@ MonoBehaviour:
   - namePiece
   - CompleteMasterSetup
   - NamePiece
+  - SyncPos
+  - SyncScale
+  - ToggleTurn
+  - SyncPawnPos
+  - SyncTile
+  - SyncMove
+  - SyncDeath
+  - SyncReset
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

@@ -39,7 +39,7 @@ public class Tile : MonoBehaviourPun
             bool validMove = chessboard.MoveTo(chessboard.draggingPiece, pos.x, pos.y);
             Debug.Log($"Valid? : {validMove}");
             if(!validMove)
-                chessboard.draggingPiece.SetPosition(chessboard.GetTileMatrix(previousPosition.x,previousPosition.y));
+                chessboard.draggingPiece.SetPosition(chessboard.GetTileMatrix(previousPosition.x,previousPosition.y), previousPosition.x, previousPosition.y);
 
             chessboard.draggingPiece = null;
             chessboard.RemoveHighlightTiles();
@@ -57,7 +57,7 @@ public class Tile : MonoBehaviourPun
 
         if(chessboard.draggingPiece && Mouse.current.leftButton.wasReleasedThisFrame){
 
-            chessboard.draggingPiece.SetPosition(chessboard.GetTileMatrix(chessboard.draggingPiece.currentX,chessboard.draggingPiece.currentY));
+            chessboard.draggingPiece.SetPosition(chessboard.GetTileMatrix(chessboard.draggingPiece.currentX,chessboard.draggingPiece.currentY), chessboard.draggingPiece.currentX, chessboard.draggingPiece.currentY);
             chessboard.draggingPiece = null;
             chessboard.RemoveHighlightTiles();
         }

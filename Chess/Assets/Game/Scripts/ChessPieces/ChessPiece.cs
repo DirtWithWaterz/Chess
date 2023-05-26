@@ -14,13 +14,12 @@ public enum ChessPieceType
     King = 6
 }
 
-public class ChessPiece : MonoBehaviour
+public class ChessPiece : MonoBehaviourPun
 {
     public Chessboard chessboard;
     public int team;
     public int currentX;
     public int currentY;
-    public Vector2Int currentPos;
     public ChessPieceType type;
 
     [SerializeField] private Vector3 desiredPosition;
@@ -76,16 +75,43 @@ public class ChessPiece : MonoBehaviour
         return r;
     }
 
-    public void SetPosition(Vector3 position, bool force = false){
+    public void SetPosition(Vector3 position, int x = -1, int y = -1, bool force = false){
 
-        desiredPosition = position + (PhotonNetwork.LocalPlayer.IsMasterClient ? (Vector3.up * positionOffset) : (Vector3.down * positionOffset));
-        if(force)
-            transform.position = desiredPosition;
+        photonView.RPC(nameof(SyncPos), RpcTarget.AllBufferedViaServer, position.x, position.y, position.z, photonView.ViewID, force, x, y);
     }
+
     public void SetScale(Vector3 scale, bool force = false){
 
-        desiredScale = scale;
+        photonView.RPC(nameof(SyncScale), RpcTarget.AllBufferedViaServer, scale.x, scale.y, scale.z, photonView.ViewID, force);
+    }
+
+    [PunRPC]
+    public void SyncPos(float x, float y, float z, int viewID, bool force, int cX, int cY){
+
+        ChessPiece cp = PhotonView.Find(viewID).GetComponent<ChessPiece>();
+
+        Vector3 position = new Vector3(x,y,z);
+
+        cp.currentX = cX;
+        cp.currentY = cY;
+
+        cp.desiredPosition = position + (PhotonNetwork.LocalPlayer.IsMasterClient ? (Vector3.up * cp.positionOffset) : (Vector3.down * cp.positionOffset));
+
         if(force)
-            transform.localScale = desiredScale;
+            cp.transform.position = cp.desiredPosition;
+    
+    }
+    [PunRPC]
+    public void SyncScale(float x, float y, float z, int viewID, bool force){
+
+        ChessPiece cp = PhotonView.Find(viewID).GetComponent<ChessPiece>();
+
+        Vector3 scale = new Vector3(x,y,z);
+
+        cp.desiredScale = scale;
+
+        if(force)
+            cp.transform.localScale = desiredScale;
+
     }
 }

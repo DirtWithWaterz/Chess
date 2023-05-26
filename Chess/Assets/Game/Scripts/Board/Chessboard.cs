@@ -280,7 +280,7 @@ public class Chessboard : MonoBehaviourPun
 
         chessPieces[x,y].currentX = x;
         chessPieces[x,y].currentY = y;
-        chessPieces[x,y].SetPosition(GetTileMatrix(x,y), force);
+        chessPieces[x,y].SetPosition(GetTileMatrix(x,y), x, y, force);
     }
     
     // Highlight Tiles
@@ -321,39 +321,49 @@ public class Chessboard : MonoBehaviourPun
     }
     public void OnResetButton(){
         
+        photonView.RPC(nameof(SyncReset), RpcTarget.AllBufferedViaServer, photonView.ViewID);
+    }
+
+    [PunRPC]
+    public void SyncReset(int boardViewID){
+
+        Chessboard cb = PhotonView.Find(boardViewID).GetComponent<Chessboard>();
+
         // UI
-        victoryScreen.transform.GetChild(0).gameObject.SetActive(false);
-        victoryScreen.transform.GetChild(1).gameObject.SetActive(false);
-        victoryScreen.SetActive(false);
+        cb.victoryScreen.transform.GetChild(0).gameObject.SetActive(false);
+        cb.victoryScreen.transform.GetChild(1).gameObject.SetActive(false);
+        cb.victoryScreen.SetActive(false);
 
         // Fields reset
-        currentlyDragging = null;
-        availableMoves = new List<Vector2Int>();
+        cb.currentlyDragging = null;
+        cb.availableMoves = new List<Vector2Int>();
 
         // Clean up
-        for(int x = 0; x < TILE_COUNT_X; x++){
+        for(int x = 0; x < cb.CONST_TILE_COUNT_X; x++){
 
-            for(int y = 0; y < TILE_COUNT_Y; y++){
+            for(int y = 0; y < cb.CONST_TILE_COUNT_Y; y++){
 
-                if(chessPieces[x,y] != null)
-                    Destroy(chessPieces[x,y].gameObject);
+                if(cb.chessPieces[x,y] != null)
+                    Destroy(cb.chessPieces[x,y].gameObject);
                 
-                chessPieces[x,y] = null;
+                cb.chessPieces[x,y] = null;
             }
         }
 
-        for(int i = 0; i < deadWhites.Count; i++)
-            Destroy(deadWhites[i].gameObject);
-        for(int i = 0; i < deadBlacks.Count; i++)
-            Destroy(deadBlacks[i].gameObject);
-        
-        deadWhites.Clear();
-        deadBlacks.Clear();
+        for(int i = 0; i < cb.deadWhites.Count; i++)
+            Destroy(cb.deadWhites[i].gameObject);
+        for(int i = 0; i < cb.deadBlacks.Count; i++)
+            Destroy(cb.deadBlacks[i].gameObject);
 
-        SpawnAllPieces();
-        PositionAllPieces();
-        iwt = true;
+        cb.deadWhites.Clear();
+        cb.deadBlacks.Clear();
+
+        if(PhotonNetwork.LocalPlayer.IsMasterClient){SpawnAllPieces();}
+        if(!PhotonNetwork.LocalPlayer.IsMasterClient){StartCoroutine(SetupClient());}
+        cb.iwt = true;
     }
+
+
     public void OnExitButton(){
 
         PhotonNetwork.Disconnect();
@@ -380,7 +390,7 @@ public class Chessboard : MonoBehaviourPun
         if(chessPieces[x,y] != null){
 
             ChessPiece ocp = chessPieces[x,y];
-
+            photonView.RPC(nameof(SyncDeath), RpcTarget.OthersBuffered, photonView.ViewID, cp.GetComponent<PhotonView>().ViewID, ocp.GetComponent<PhotonView>().ViewID);
             if(cp.team == ocp.team)
                 return false;
             
@@ -416,10 +426,68 @@ public class Chessboard : MonoBehaviourPun
 
         PositionSinglePiece(x,y);
 
-        iwt = !iwt;
+        photonView.RPC(nameof(SyncMove), RpcTarget.OthersBuffered, photonView.ViewID, cp.GetComponent<PhotonView>().ViewID, x, y, previousPosition.x, previousPosition.y);
+        photonView.RPC(nameof(ToggleTurn), RpcTarget.AllBufferedViaServer, photonView.ViewID);
 
         return true;
     }
+
+    [PunRPC]
+    public void SyncMove(int boardViewID, int pieceViewID, int x, int y, int pX, int pY){
+
+        Chessboard cb = PhotonView.Find(boardViewID).GetComponent<Chessboard>();
+        ChessPiece cp = PhotonView.Find(pieceViewID).GetComponent<ChessPiece>();
+
+        cb.chessPieces[x,y] = cp;
+        cb.chessPieces[pX,pY] = null;
+
+        cb.PositionSinglePiece(x,y);
+    }
+    [PunRPC]
+    public void SyncDeath(int cbViewID, int cpViewID, int ocpViewID){
+        
+        Chessboard cb = PhotonView.Find(cbViewID).GetComponent<Chessboard>();
+        ChessPiece cp = PhotonView.Find(cpViewID).GetComponent<ChessPiece>();
+        ChessPiece ocp = PhotonView.Find(ocpViewID).GetComponent<ChessPiece>();
+
+        if(cp.team == ocp.team)
+            return;
+            
+        // if it's the enemy team
+        if(ocp.team == 0){
+
+            if(ocp.type == ChessPieceType.King)
+                cb.CheckMate(1);
+
+            cb.deadWhites.Add(ocp);
+            ocp.SetScale(Vector3.one * cb.deathSize);
+            ocp.SetPosition(new Vector3(8 * cb.tileSize, -1 * cb.tileSize, -cb.zOffset) 
+            - cb.bounds 
+            + new Vector3(cb.tileSize / 2, cb.tileSize / 2, 0) 
+            + (Vector3.up * cb.deathSpacing) * (cb.deadWhites.Count + cb.deadOffset));
+        }
+        else if(ocp.team == 1){
+
+            if(ocp.type == ChessPieceType.King)
+                cb.CheckMate(0);
+
+            cb.deadBlacks.Add(ocp);
+            ocp.SetScale(Vector3.one * cb.deathSize);
+            ocp.SetPosition(new Vector3(-1 * cb.tileSize, 8 * cb.tileSize, -cb.zOffset) 
+            - cb.bounds 
+            + new Vector3(cb.tileSize / -2, cb.tileSize / -2, 0) 
+            + (Vector3.down * cb.deathSpacing) * (cb.deadBlacks.Count + cb.deadOffset));
+        }
+    }
+
+    [PunRPC]
+    public void ToggleTurn(int viewID){
+
+        Chessboard cb = PhotonView.Find(viewID).GetComponent<Chessboard>();
+
+        cb.iwt = !cb.iwt;
+    }
+
     private Vector2Int LookupTileIndex(GameObject hitInfo)
     {
         for(int x = 0; x < TILE_COUNT_X; x++)

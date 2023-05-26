@@ -428,6 +428,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerPrefab: {fileID: 4375756017326732457, guid: 8d7a9083e074ef945859ea22294db154, type: 3}
+  p1: {fileID: 0}
+  p2: {fileID: 0}
 --- !u!114 &178706224
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -587,7 +589,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0.19215687, g: 0.4745098, b: 0.4627451, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
