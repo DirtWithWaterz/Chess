@@ -21,6 +21,7 @@ public class ChessPiece : MonoBehaviourPun
     public int currentX;
     public int currentY;
     public ChessPieceType type;
+    public bool isDead = false;
 
     [SerializeField] private Vector3 desiredPosition;
     [SerializeField] private float positionOffset = 0.1f;
@@ -40,6 +41,7 @@ public class ChessPiece : MonoBehaviourPun
     }
 
     private void Start(){
+        isDead = false;
         mainCamera = Camera.main;
         chessboard = GameObject.Find("Chessboard").GetComponent<Chessboard>();
 
@@ -49,17 +51,24 @@ public class ChessPiece : MonoBehaviourPun
 
     private void Update(){
 
-        if(transform.localScale != desiredScale){
-            transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * 30);
-            transform.localScale = Vector3.Lerp(transform.localScale, desiredScale, Time.deltaTime * 30);
+        if(isDead){
+            transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * 20);
+            transform.localScale = Vector3.Lerp(transform.localScale, desiredScale, Time.deltaTime * 20);
         }
         if((chessboard.draggingPiece != null && Mouse.current.leftButton.isPressed)){
 
             return;
         }
         // if(chessboard.draggingPiece.team == team){return;}
-        transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * 30);
-        transform.localScale = Vector3.Lerp(transform.localScale, desiredScale, Time.deltaTime * 30);
+        // if(team == 0 && !PhotonNetwork.LocalPlayer.IsMasterClient){
+        //     transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * 2);
+        //     transform.localScale = Vector3.Lerp(transform.localScale, desiredScale, Time.deltaTime * 2);
+        // } else if(team == 1 && PhotonNetwork.LocalPlayer.IsMasterClient){
+        //     transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * 2);
+        //     transform.localScale = Vector3.Lerp(transform.localScale, desiredScale, Time.deltaTime * 2);
+        // }
+        transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * 25);
+        transform.localScale = Vector3.Lerp(transform.localScale, desiredScale, Time.deltaTime * 25);
         chessboard.RemoveHighlightTiles();
     }
 
@@ -76,6 +85,20 @@ public class ChessPiece : MonoBehaviourPun
     }
 
     public void SetPosition(Vector3 position, int x = -1, int y = -1, bool force = false){
+
+        if(team == 0 && PhotonNetwork.LocalPlayer.IsMasterClient && !isDead){
+            desiredPosition = position + (PhotonNetwork.LocalPlayer.IsMasterClient ? (Vector3.up * positionOffset) : (Vector3.down * positionOffset));
+            transform.position = desiredPosition;
+        }
+        if(team == 1 && !PhotonNetwork.LocalPlayer.IsMasterClient && !isDead){
+            desiredPosition = position + (PhotonNetwork.LocalPlayer.IsMasterClient ? (Vector3.up * positionOffset) : (Vector3.down * positionOffset));
+            transform.position = desiredPosition;
+        }
+        if(isDead){
+            desiredPosition = position + (PhotonNetwork.LocalPlayer.IsMasterClient ? (Vector3.up * positionOffset) : (Vector3.down * positionOffset));
+        }
+        currentX = x;
+        currentY = y;
 
         photonView.RPC(nameof(SyncPos), RpcTarget.AllBufferedViaServer, position.x, position.y, position.z, photonView.ViewID, force, x, y);
     }

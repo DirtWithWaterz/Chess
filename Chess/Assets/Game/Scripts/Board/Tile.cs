@@ -41,6 +41,10 @@ public class Tile : MonoBehaviourPun
             if(!validMove)
                 chessboard.draggingPiece.SetPosition(chessboard.GetTileMatrix(previousPosition.x,previousPosition.y), previousPosition.x, previousPosition.y);
 
+            if(validMove){
+                chessboard.draggingPiece.currentX = pos.x;
+                chessboard.draggingPiece.currentY = pos.y;
+            }
             chessboard.draggingPiece = null;
             chessboard.RemoveHighlightTiles();
         }

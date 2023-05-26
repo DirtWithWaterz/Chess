@@ -103,6 +103,7 @@ MonoBehaviour:
   currentX: 0
   currentY: 0
   type: 0
+  isDead: 0
   desiredPosition: {x: 0, y: 0, z: 0}
   positionOffset: 0.1
 --- !u!114 &6430419267788052683

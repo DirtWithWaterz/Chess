@@ -32,8 +32,8 @@ public class Chessboard : MonoBehaviourPun
     public GameObject shadow;
     private ChessPiece currentlyDragging;
     public List<Vector2Int> availableMoves = new List<Vector2Int>();
-    private List<ChessPiece> deadWhites = new List<ChessPiece>();
-    private List<ChessPiece> deadBlacks = new List<ChessPiece>();
+    public List<ChessPiece> deadWhites = new List<ChessPiece>();
+    public List<ChessPiece> deadBlacks = new List<ChessPiece>();
     private const int TILE_COUNT_X = 8;
     private const int TILE_COUNT_Y = 8;
     private GameObject[,] tiles;
@@ -401,6 +401,7 @@ public class Chessboard : MonoBehaviourPun
                     CheckMate(1);
 
                 deadWhites.Add(ocp);
+                ocp.isDead = true;
                 ocp.SetScale(Vector3.one * deathSize);
                 ocp.SetPosition(new Vector3(8 * tileSize, -1 * tileSize, -zOffset) 
                 - bounds 
@@ -413,6 +414,7 @@ public class Chessboard : MonoBehaviourPun
                     CheckMate(0);
 
                 deadBlacks.Add(ocp);
+                ocp.isDead = true;
                 ocp.SetScale(Vector3.one * deathSize);
                 ocp.SetPosition(new Vector3(-1 * tileSize, 8 * tileSize, -zOffset) 
                 - bounds 
@@ -424,6 +426,8 @@ public class Chessboard : MonoBehaviourPun
         chessPieces[x,y] = cp;
         chessPieces[previousPosition.x,previousPosition.y] = null;
 
+        cp.currentX = x;
+        cp.currentY = y;
         PositionSinglePiece(x,y);
 
         photonView.RPC(nameof(SyncMove), RpcTarget.OthersBuffered, photonView.ViewID, cp.GetComponent<PhotonView>().ViewID, x, y, previousPosition.x, previousPosition.y);
@@ -441,6 +445,8 @@ public class Chessboard : MonoBehaviourPun
         cb.chessPieces[x,y] = cp;
         cb.chessPieces[pX,pY] = null;
 
+        cp.currentX = x;
+        cp.currentY = y;
         cb.PositionSinglePiece(x,y);
     }
     [PunRPC]
