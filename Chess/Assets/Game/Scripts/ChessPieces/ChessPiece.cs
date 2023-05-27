@@ -52,7 +52,7 @@ public class ChessPiece : MonoBehaviourPun
     private void Update(){
 
         if(isDead){
-            transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * 20);
+            transform.position = desiredPosition;
             transform.localScale = Vector3.Lerp(transform.localScale, desiredScale, Time.deltaTime * 20);
         }
         if((chessboard.draggingPiece != null && Mouse.current.leftButton.isPressed)){
@@ -67,8 +67,8 @@ public class ChessPiece : MonoBehaviourPun
         //     transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * 2);
         //     transform.localScale = Vector3.Lerp(transform.localScale, desiredScale, Time.deltaTime * 2);
         // }
-        transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * 25);
-        transform.localScale = Vector3.Lerp(transform.localScale, desiredScale, Time.deltaTime * 25);
+        transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * 20);
+        transform.localScale = Vector3.Lerp(transform.localScale, desiredScale, Time.deltaTime * 20);
         chessboard.RemoveHighlightTiles();
     }
 
@@ -84,7 +84,12 @@ public class ChessPiece : MonoBehaviourPun
         return r;
     }
 
-    public void SetPosition(Vector3 position, int x = -1, int y = -1, bool force = false){
+    public virtual SpecialMove GetSpecialMoves(ref ChessPiece[,] board, ref List<Vector2Int[]> moveList, ref List<Vector2Int> availableMoves){
+
+        return SpecialMove.None;
+    }
+
+    public void SetPosition(Vector3 position, bool force = false){
 
         if(team == 0 && PhotonNetwork.LocalPlayer.IsMasterClient && !isDead){
             desiredPosition = position + (PhotonNetwork.LocalPlayer.IsMasterClient ? (Vector3.up * positionOffset) : (Vector3.down * positionOffset));
@@ -97,10 +102,8 @@ public class ChessPiece : MonoBehaviourPun
         if(isDead){
             desiredPosition = position + (PhotonNetwork.LocalPlayer.IsMasterClient ? (Vector3.up * positionOffset) : (Vector3.down * positionOffset));
         }
-        currentX = x;
-        currentY = y;
 
-        photonView.RPC(nameof(SyncPos), RpcTarget.AllBufferedViaServer, position.x, position.y, position.z, photonView.ViewID, force, x, y);
+        photonView.RPC(nameof(SyncPos), RpcTarget.AllBufferedViaServer, position.x, position.y, position.z, photonView.ViewID, force);
     }
 
     public void SetScale(Vector3 scale, bool force = false){
@@ -109,14 +112,12 @@ public class ChessPiece : MonoBehaviourPun
     }
 
     [PunRPC]
-    public void SyncPos(float x, float y, float z, int viewID, bool force, int cX, int cY){
+    public void SyncPos(float x, float y, float z, int viewID, bool force){
 
         ChessPiece cp = PhotonView.Find(viewID).GetComponent<ChessPiece>();
 
         Vector3 position = new Vector3(x,y,z);
 
-        cp.currentX = cX;
-        cp.currentY = cY;
 
         cp.desiredPosition = position + (PhotonNetwork.LocalPlayer.IsMasterClient ? (Vector3.up * cp.positionOffset) : (Vector3.down * cp.positionOffset));
 

@@ -33,13 +33,13 @@ public class Tile : MonoBehaviourPun
 
         // If the mouse button is released over me while holding a piece
         if(chessboard.draggingPiece != null && Mouse.current.leftButton.wasReleasedThisFrame){
-            Debug.Log("Piece Discovered!");
+            Debug.Log($"Piece : {chessboard.draggingPiece.type}");
             Vector2Int previousPosition = new Vector2Int(chessboard.draggingPiece.currentX, chessboard.draggingPiece.currentY);
-            Debug.Log($"Telling {chessboard.name} to move {chessboard.draggingPiece.GetComponent<ChessPiece>().type} to position: ({pos.x},{pos.y})");
+            Debug.Log($"Telling {chessboard.name} to move {chessboard.draggingPiece.type} to position: ({pos.x},{pos.y})");
             bool validMove = chessboard.MoveTo(chessboard.draggingPiece, pos.x, pos.y);
             Debug.Log($"Valid? : {validMove}");
             if(!validMove)
-                chessboard.draggingPiece.SetPosition(chessboard.GetTileMatrix(previousPosition.x,previousPosition.y), previousPosition.x, previousPosition.y);
+                chessboard.draggingPiece.SetPosition(chessboard.GetTileMatrix(previousPosition.x,previousPosition.y));
 
             if(validMove){
                 chessboard.draggingPiece.currentX = pos.x;
@@ -61,7 +61,7 @@ public class Tile : MonoBehaviourPun
 
         if(chessboard.draggingPiece && Mouse.current.leftButton.wasReleasedThisFrame){
 
-            chessboard.draggingPiece.SetPosition(chessboard.GetTileMatrix(chessboard.draggingPiece.currentX,chessboard.draggingPiece.currentY), chessboard.draggingPiece.currentX, chessboard.draggingPiece.currentY);
+            chessboard.draggingPiece.SetPosition(chessboard.GetTileMatrix(chessboard.draggingPiece.currentX,chessboard.draggingPiece.currentY));
             chessboard.draggingPiece = null;
             chessboard.RemoveHighlightTiles();
         }
@@ -78,6 +78,9 @@ public class Tile : MonoBehaviourPun
                 // Get a list of where I can go and highlight those tiles
                 chessboard.availableMoves = chessboard.draggingPiece.GetAvailableMoves(ref chessboard.chessPieces, chessboard.CONST_TILE_COUNT_X, chessboard.CONST_TILE_COUNT_Y);
                 
+                // Also get a list of special moves
+                chessboard.specialMove = chessboard.draggingPiece.GetSpecialMoves(ref chessboard.chessPieces, ref chessboard.moveList, ref chessboard.availableMoves);
+
                 chessboard.HighlightTiles();
             }
         }

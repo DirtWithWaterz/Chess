@@ -5,6 +5,14 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+public enum SpecialMove
+{
+    None = 0,
+    EnPassant,
+    Castling,
+    Promotion
+}
+
 public class Chessboard : MonoBehaviourPun
 {
     [Header("Art Stuff")]
@@ -42,6 +50,8 @@ public class Chessboard : MonoBehaviourPun
     public Vector3 bounds;
     private Vector2 mousePos;
     private bool iwt;
+    public SpecialMove specialMove;
+    public List<Vector2Int[]> moveList = new List<Vector2Int[]>();
     
     public bool isWhiteTurn{
         get{
@@ -280,14 +290,14 @@ public class Chessboard : MonoBehaviourPun
 
         chessPieces[x,y].currentX = x;
         chessPieces[x,y].currentY = y;
-        chessPieces[x,y].SetPosition(GetTileMatrix(x,y), x, y, force);
+        chessPieces[x,y].SetPosition(GetTileMatrix(x,y), force);
     }
     
     // Highlight Tiles
     public void HighlightTiles()
     {
         for(int i = 0; i < availableMoves.Count; i++){
-            Debug.Log("Current iteration: " + availableMoves[i]);
+            Debug.Log("Current highlight iteration: " + availableMoves[i]);
             Vector2Int aPos = availableMoves[i];
             Debug.Log($"Creating marker at: ({publicTilesArray[aPos.x,aPos.y].GetComponent<Tile>().pos.x},{publicTilesArray[aPos.x,aPos.y].GetComponent<Tile>().pos.y})");
             GameObject Marker = new GameObject($"{publicTilesArray[aPos.x, aPos.y].name} Highlight");
@@ -300,7 +310,7 @@ public class Chessboard : MonoBehaviourPun
     public void RemoveHighlightTiles()
     {
         for(int i = 0; i < availableMoves.Count; i++){
-            Debug.Log("Current iteration: " + availableMoves[i]);
+            Debug.Log("Current highlight iteration: " + availableMoves[i]);
             Vector2Int aPos = availableMoves[i];
             Debug.Log($"Destroying marker at: ({publicTilesArray[aPos.x,aPos.y].GetComponent<Tile>().pos.x},{publicTilesArray[aPos.x,aPos.y].GetComponent<Tile>().pos.y})");
             GameObject.Destroy(GameObject.Find($"{publicTilesArray[aPos.x, aPos.y].name} Highlight"));
@@ -336,7 +346,8 @@ public class Chessboard : MonoBehaviourPun
 
         // Fields reset
         cb.currentlyDragging = null;
-        cb.availableMoves = new List<Vector2Int>();
+        cb.availableMoves.Clear();
+        cb.moveList.Clear();
 
         // Clean up
         for(int x = 0; x < cb.CONST_TILE_COUNT_X; x++){
@@ -357,6 +368,7 @@ public class Chessboard : MonoBehaviourPun
 
         cb.deadWhites.Clear();
         cb.deadBlacks.Clear();
+        cb.masterSetupComplete = false;
 
         if(PhotonNetwork.LocalPlayer.IsMasterClient){SpawnAllPieces();}
         if(!PhotonNetwork.LocalPlayer.IsMasterClient){StartCoroutine(SetupClient());}
@@ -370,8 +382,79 @@ public class Chessboard : MonoBehaviourPun
         PhotonNetwork.LoadLevel("MainMenu");
     }
     
+    // Special Moves
+    private void ProcessSpecialMove(){
+
+        if(specialMove == SpecialMove.EnPassant){
+
+            var newMove = moveList[moveList.Count - 1];
+            ChessPiece myPawn = chessPieces[newMove[1].x, newMove[1].y];
+            var targetPawnPosition = moveList[moveList.Count - 2];
+            ChessPiece enemyPawn = chessPieces[targetPawnPosition[1].x, targetPawnPosition[1].y];
+
+            if(myPawn.currentX == enemyPawn.currentX){
+
+                if(myPawn.currentY == enemyPawn.currentY - 1 || myPawn.currentY == enemyPawn.currentY + 1){
+
+                    photonView.RPC(nameof(SyncEnPassant), RpcTarget.OthersBuffered, photonView.ViewID, myPawn.GetComponent<PhotonView>().ViewID, enemyPawn.GetComponent<PhotonView>().ViewID);
+                    if(enemyPawn.team == 0){
+
+                        deadWhites.Add(enemyPawn);
+                        enemyPawn.isDead = true;
+                        enemyPawn.SetScale(Vector3.one * deathSize);
+                        enemyPawn.SetPosition(new Vector3(8 * tileSize, -1 * tileSize, -zOffset) 
+                        - bounds 
+                        + new Vector3(tileSize / 2, tileSize / 2, 0) 
+                        + (Vector3.up * deathSpacing) * (deadWhites.Count + deadOffset));
+                    }
+                    else if(enemyPawn.team == 1){
+
+                        deadBlacks.Add(enemyPawn);
+                        enemyPawn.isDead = true;
+                        enemyPawn.SetScale(Vector3.one * deathSize);
+                        enemyPawn.SetPosition(new Vector3(-1 * tileSize, 8 * tileSize, -zOffset) 
+                        - bounds 
+                        + new Vector3(tileSize / -2, tileSize / -2, 0) 
+                        + (Vector3.down * deathSpacing) * (deadBlacks.Count + deadOffset));
+                    }
+                    chessPieces[enemyPawn.currentX, enemyPawn.currentY] = null;
+                }
+            }
+        }
+    }
+
+    [PunRPC]
+    public void SyncEnPassant(int cbViewID, int cpViewID, int ocpViewID){
+
+        Chessboard cb = PhotonView.Find(cbViewID).GetComponent<Chessboard>();
+        ChessPiece cp = PhotonView.Find(cpViewID).GetComponent<ChessPiece>();
+        ChessPiece ocp = PhotonView.Find(ocpViewID).GetComponent<ChessPiece>();
+
+        if(ocp.team == 0){
+
+            cb.deadWhites.Add(ocp);
+            ocp.isDead = true;
+            ocp.SetScale(Vector3.one * cb.deathSize);
+            ocp.SetPosition(new Vector3(8 * cb.tileSize, -1 * cb.tileSize, -cb.zOffset) 
+            - cb.bounds 
+            + new Vector3(cb.tileSize / 2, cb.tileSize / 2, 0) 
+            + (Vector3.up * cb.deathSpacing) * (cb.deadWhites.Count + cb.deadOffset));
+        }
+        else if(ocp.team == 1){
+
+            cb.deadBlacks.Add(ocp);
+            ocp.isDead = true;
+            ocp.SetScale(Vector3.one * cb.deathSize);
+            ocp.SetPosition(new Vector3(-1 * cb.tileSize, 8 * cb.tileSize, -cb.zOffset) 
+            - cb.bounds 
+            + new Vector3(cb.tileSize / -2, cb.tileSize / -2, 0) 
+            + (Vector3.down * cb.deathSpacing) * (cb.deadBlacks.Count + cb.deadOffset));
+        }
+        chessPieces[ocp.currentX, ocp.currentY] = null;
+    }
+    
     // Operations
-    public bool ContainsValidMove(ref List<Vector2Int> moves, Vector2 pos){
+    public bool ContainsValidMove(ref List<Vector2Int> moves, Vector2Int pos){
 
         for(int i = 0; i < moves.Count; i++)
             if(moves[i].x == pos.x && moves[i].y == pos.y)
@@ -381,7 +464,7 @@ public class Chessboard : MonoBehaviourPun
     }
     public bool MoveTo(ChessPiece cp, int x, int y){
 
-        if(!ContainsValidMove(ref availableMoves, new Vector2(x, y)))
+        if(!ContainsValidMove(ref availableMoves, new Vector2Int(x, y)))
             return false;
 
         Vector2Int previousPosition = new Vector2Int(cp.currentX, cp.currentY);
@@ -430,6 +513,12 @@ public class Chessboard : MonoBehaviourPun
         cp.currentY = y;
         PositionSinglePiece(x,y);
 
+
+        moveList.Add(new Vector2Int[] {previousPosition, new Vector2Int(x,y)});
+
+        ProcessSpecialMove();
+
+
         photonView.RPC(nameof(SyncMove), RpcTarget.OthersBuffered, photonView.ViewID, cp.GetComponent<PhotonView>().ViewID, x, y, previousPosition.x, previousPosition.y);
         photonView.RPC(nameof(ToggleTurn), RpcTarget.AllBufferedViaServer, photonView.ViewID);
 
@@ -448,6 +537,9 @@ public class Chessboard : MonoBehaviourPun
         cp.currentX = x;
         cp.currentY = y;
         cb.PositionSinglePiece(x,y);
+
+        cb.moveList.Add(new Vector2Int[] {new Vector2Int(pX,pY), new Vector2Int(x,y)});
+        cb.ProcessSpecialMove();
     }
     [PunRPC]
     public void SyncDeath(int cbViewID, int cpViewID, int ocpViewID){
@@ -466,6 +558,7 @@ public class Chessboard : MonoBehaviourPun
                 cb.CheckMate(1);
 
             cb.deadWhites.Add(ocp);
+            ocp.isDead = true;
             ocp.SetScale(Vector3.one * cb.deathSize);
             ocp.SetPosition(new Vector3(8 * cb.tileSize, -1 * cb.tileSize, -cb.zOffset) 
             - cb.bounds 
@@ -478,6 +571,7 @@ public class Chessboard : MonoBehaviourPun
                 cb.CheckMate(0);
 
             cb.deadBlacks.Add(ocp);
+            ocp.isDead = true;
             ocp.SetScale(Vector3.one * cb.deathSize);
             ocp.SetPosition(new Vector3(-1 * cb.tileSize, 8 * cb.tileSize, -cb.zOffset) 
             - cb.bounds 
