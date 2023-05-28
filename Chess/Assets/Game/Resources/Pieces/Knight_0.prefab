@@ -102,6 +102,7 @@ MonoBehaviour:
   team: 0
   currentX: 0
   currentY: 0
+  currentPos: {x: 0, y: 0}
   type: 0
   isDead: 0
   desiredPosition: {x: 0, y: 0, z: 0}

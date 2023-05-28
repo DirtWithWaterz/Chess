@@ -20,6 +20,7 @@ public class ChessPiece : MonoBehaviourPun
     public int team;
     public int currentX;
     public int currentY;
+    public Vector2Int currentPos;
     public ChessPieceType type;
     public bool isDead = false;
 
@@ -51,6 +52,7 @@ public class ChessPiece : MonoBehaviourPun
 
     private void Update(){
 
+        currentPos = new Vector2Int(currentX,currentY);
         if(isDead){
             transform.position = desiredPosition;
             transform.localScale = Vector3.Lerp(transform.localScale, desiredScale, Time.deltaTime * 20);

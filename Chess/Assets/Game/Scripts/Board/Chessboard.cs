@@ -402,24 +402,138 @@ public class Chessboard : MonoBehaviourPun
                         deadWhites.Add(enemyPawn);
                         enemyPawn.isDead = true;
                         enemyPawn.SetScale(Vector3.one * deathSize);
-                        enemyPawn.SetPosition(new Vector3(8 * tileSize, -1 * tileSize, -zOffset) 
+                        enemyPawn.SetPosition(new Vector3(-1 * tileSize, 8 * tileSize, -zOffset) 
                         - bounds 
-                        + new Vector3(tileSize / 2, tileSize / 2, 0) 
-                        + (Vector3.up * deathSpacing) * (deadWhites.Count + deadOffset));
+                        + new Vector3(tileSize / -2, tileSize / -2, 0) 
+                        + (Vector3.down * deathSpacing) * ((deadWhites.Count) + deadOffset));
                     }
                     else if(enemyPawn.team == 1){
 
                         deadBlacks.Add(enemyPawn);
                         enemyPawn.isDead = true;
                         enemyPawn.SetScale(Vector3.one * deathSize);
-                        enemyPawn.SetPosition(new Vector3(-1 * tileSize, 8 * tileSize, -zOffset) 
+                        enemyPawn.SetPosition(new Vector3(8 * tileSize, -1 * tileSize, -zOffset) 
                         - bounds 
-                        + new Vector3(tileSize / -2, tileSize / -2, 0) 
-                        + (Vector3.down * deathSpacing) * (deadBlacks.Count + deadOffset));
+                        + new Vector3(tileSize / 2, tileSize / 2, 0) 
+                        + (Vector3.up * deathSpacing) * ((deadBlacks.Count) + deadOffset));
                     }
                     chessPieces[enemyPawn.currentX, enemyPawn.currentY] = null;
                 }
             }
+        }
+    
+        if(specialMove == SpecialMove.Promotion){
+
+            if((isWhiteTurn && PhotonNetwork.LocalPlayer.IsMasterClient) || (!isWhiteTurn && !PhotonNetwork.LocalPlayer.IsMasterClient)){
+
+
+                Vector2Int[] lastMove = moveList[moveList.Count - 1];
+                ChessPiece targetPawn = chessPieces[lastMove[1].x, lastMove[1].y];
+
+                if(targetPawn.type == ChessPieceType.Pawn){
+
+                    if(targetPawn.team == 0 && lastMove[1].y == 7){
+
+                        ChessPiece newQueen = SpawnSinglePiece(ChessPieceType.Queen, 0, "050-1", targetPawn.currentX, targetPawn.currentY);
+                        newQueen.SetPosition(GetTileMatrix(lastMove[1].x, lastMove[1].y), true);
+                        PositionSinglePiece(lastMove[1].x, lastMove[1].y, true);
+                        photonView.RPC(nameof(SyncPromotion), RpcTarget.AllBufferedViaServer, photonView.ViewID, newQueen.photonView.ViewID, targetPawn.photonView.ViewID);
+                    }
+                    if(targetPawn.team == 1 && lastMove[1].y == 0){
+
+                        ChessPiece newQueen = SpawnSinglePiece(ChessPieceType.Queen, 1, "150-1", targetPawn.currentX, targetPawn.currentY);
+                        newQueen.SetPosition(GetTileMatrix(lastMove[1].x, lastMove[1].y), true);
+                        PositionSinglePiece(lastMove[1].x, lastMove[1].y, true);
+                        photonView.RPC(nameof(SyncPromotion), RpcTarget.AllBufferedViaServer, photonView.ViewID, newQueen.photonView.ViewID, targetPawn.photonView.ViewID);
+                    }
+                }
+            }
+        }
+
+        if(specialMove == SpecialMove.Castling){
+            
+            if((isWhiteTurn && PhotonNetwork.LocalPlayer.IsMasterClient) || (!isWhiteTurn && !PhotonNetwork.LocalPlayer.IsMasterClient)){
+
+                Vector2Int[] lastMove = moveList[moveList.Count - 1];
+                ChessPiece rook = null;
+
+                // Left Rook
+                if(lastMove[1].x == 2){
+
+                    if(lastMove[1].y == 0){ // White side
+
+                        rook = chessPieces[0,0];
+                    }
+                    else if(lastMove[1].y == 7){ // Black side
+
+                        rook = chessPieces[0,7];
+                    }
+                    photonView.RPC(nameof(SyncCastle), RpcTarget.AllBufferedViaServer, photonView.ViewID, rook.GetComponent<PhotonView>().ViewID);
+                }
+                // Right Rook
+                else if(lastMove[1].x == 6){
+
+                    if(lastMove[1].y == 0){ // White side
+
+                        rook = chessPieces[7,0];
+                    }
+                    else if(lastMove[1].y == 7){ // Black side
+
+                        rook = chessPieces[7,7];
+                    }
+                    photonView.RPC(nameof(SyncCastle), RpcTarget.AllBufferedViaServer, photonView.ViewID, rook.GetComponent<PhotonView>().ViewID);
+                }
+            }
+        }
+    }
+
+    [PunRPC]
+    public void SyncPromotion(int boardViewID, int newQueenViewID, int pawnViewID){
+        
+        Chessboard board = PhotonView.Find(boardViewID).GetComponent<Chessboard>();
+        ChessPiece newQueen = PhotonView.Find(newQueenViewID).GetComponent<ChessPiece>();
+        ChessPiece pawn = PhotonView.Find(pawnViewID).GetComponent<ChessPiece>();
+
+        Vector2Int[] lastMove = board.moveList[board.moveList.Count - 1];
+
+        board.chessPieces[pawn.currentX,pawn.currentY] = newQueen;
+        Destroy(pawn.gameObject);
+        board.PositionSinglePiece(lastMove[1].x, lastMove[1].y, true);
+
+        
+    }
+
+    [PunRPC]
+    public void SyncCastle(int boardViewID, int rookViewID){
+
+        Chessboard board = PhotonView.Find(boardViewID).GetComponent<Chessboard>();
+        ChessPiece rook = PhotonView.Find(rookViewID).GetComponent<ChessPiece>();
+
+        // Left Rook
+        if(rook.currentPos == new Vector2Int(0,0)){ // White side
+
+            board.chessPieces[3,0] = rook;
+            board.PositionSinglePiece(3,0);
+            board.chessPieces[0,0] = null;
+        }
+        else if(rook.currentPos == new Vector2Int(0,7)){ // Black side
+
+            board.chessPieces[3,7] = rook;
+            board.PositionSinglePiece(3,7);
+            board.chessPieces[0,7] = null;
+        }
+        // Right Rook
+        else if(rook.currentPos == new Vector2Int(7,0)){ // White side
+
+            board.chessPieces[5,0] = rook;
+            board.PositionSinglePiece(5,0);
+            board.chessPieces[7,0] = null;
+        }
+        else if(rook.currentPos == new Vector2Int(7,7)){ // Black side
+
+            board.chessPieces[5,7] = rook;
+            board.PositionSinglePiece(5,7);
+            board.chessPieces[7,7] = null;
         }
     }
 
@@ -435,20 +549,20 @@ public class Chessboard : MonoBehaviourPun
             cb.deadWhites.Add(ocp);
             ocp.isDead = true;
             ocp.SetScale(Vector3.one * cb.deathSize);
-            ocp.SetPosition(new Vector3(8 * cb.tileSize, -1 * cb.tileSize, -cb.zOffset) 
+            ocp.SetPosition(new Vector3(-1 * cb.tileSize, 8 * cb.tileSize, -cb.zOffset) 
             - cb.bounds 
-            + new Vector3(cb.tileSize / 2, cb.tileSize / 2, 0) 
-            + (Vector3.up * cb.deathSpacing) * (cb.deadWhites.Count + cb.deadOffset));
+            + new Vector3(cb.tileSize / -2, cb.tileSize / -2, 0) 
+            + (Vector3.down * cb.deathSpacing) * ((cb.deadWhites.Count) + cb.deadOffset));
         }
         else if(ocp.team == 1){
 
             cb.deadBlacks.Add(ocp);
             ocp.isDead = true;
             ocp.SetScale(Vector3.one * cb.deathSize);
-            ocp.SetPosition(new Vector3(-1 * cb.tileSize, 8 * cb.tileSize, -cb.zOffset) 
+            ocp.SetPosition(new Vector3(8 * cb.tileSize, -1 * cb.tileSize, -cb.zOffset) 
             - cb.bounds 
-            + new Vector3(cb.tileSize / -2, cb.tileSize / -2, 0) 
-            + (Vector3.down * cb.deathSpacing) * (cb.deadBlacks.Count + cb.deadOffset));
+            + new Vector3(cb.tileSize / 2, cb.tileSize / 2, 0) 
+            + (Vector3.up * cb.deathSpacing) * ((cb.deadBlacks.Count) + cb.deadOffset));
         }
         chessPieces[ocp.currentX, ocp.currentY] = null;
     }
@@ -486,10 +600,10 @@ public class Chessboard : MonoBehaviourPun
                 deadWhites.Add(ocp);
                 ocp.isDead = true;
                 ocp.SetScale(Vector3.one * deathSize);
-                ocp.SetPosition(new Vector3(8 * tileSize, -1 * tileSize, -zOffset) 
+                ocp.SetPosition(new Vector3(-1 * tileSize, 8 * tileSize, -zOffset) 
                 - bounds 
-                + new Vector3(tileSize / 2, tileSize / 2, 0) 
-                + (Vector3.up * deathSpacing) * (deadWhites.Count + deadOffset));
+                + new Vector3(tileSize / -2, tileSize / -2, 0) 
+                + (Vector3.down * deathSpacing) * ((deadWhites.Count) + deadOffset));
             }
             else if(ocp.team == 1){
 
@@ -499,10 +613,10 @@ public class Chessboard : MonoBehaviourPun
                 deadBlacks.Add(ocp);
                 ocp.isDead = true;
                 ocp.SetScale(Vector3.one * deathSize);
-                ocp.SetPosition(new Vector3(-1 * tileSize, 8 * tileSize, -zOffset) 
+                ocp.SetPosition(new Vector3(8 * tileSize, -1 * tileSize, -zOffset) 
                 - bounds 
-                + new Vector3(tileSize / -2, tileSize / -2, 0) 
-                + (Vector3.down * deathSpacing) * (deadBlacks.Count + deadOffset));
+                + new Vector3(tileSize / 2, tileSize / 2, 0) 
+                + (Vector3.up * deathSpacing) * ((deadBlacks.Count) + deadOffset));
             }
         }
 
@@ -560,10 +674,10 @@ public class Chessboard : MonoBehaviourPun
             cb.deadWhites.Add(ocp);
             ocp.isDead = true;
             ocp.SetScale(Vector3.one * cb.deathSize);
-            ocp.SetPosition(new Vector3(8 * cb.tileSize, -1 * cb.tileSize, -cb.zOffset) 
+            ocp.SetPosition(new Vector3(-1 * cb.tileSize, 8 * cb.tileSize, -cb.zOffset) 
             - cb.bounds 
-            + new Vector3(cb.tileSize / 2, cb.tileSize / 2, 0) 
-            + (Vector3.up * cb.deathSpacing) * (cb.deadWhites.Count + cb.deadOffset));
+            + new Vector3(cb.tileSize / -2, cb.tileSize / -2, 0) 
+            + (Vector3.down * cb.deathSpacing) * ((cb.deadWhites.Count) + cb.deadOffset));
         }
         else if(ocp.team == 1){
 
@@ -573,10 +687,10 @@ public class Chessboard : MonoBehaviourPun
             cb.deadBlacks.Add(ocp);
             ocp.isDead = true;
             ocp.SetScale(Vector3.one * cb.deathSize);
-            ocp.SetPosition(new Vector3(-1 * cb.tileSize, 8 * cb.tileSize, -cb.zOffset) 
+            ocp.SetPosition(new Vector3(8 * cb.tileSize, -1 * cb.tileSize, -cb.zOffset) 
             - cb.bounds 
-            + new Vector3(cb.tileSize / -2, cb.tileSize / -2, 0) 
-            + (Vector3.down * cb.deathSpacing) * (cb.deadBlacks.Count + cb.deadOffset));
+            + new Vector3(cb.tileSize / 2, cb.tileSize / 2, 0) 
+            + (Vector3.up * cb.deathSpacing) * ((cb.deadBlacks.Count) + cb.deadOffset));
         }
     }
 
