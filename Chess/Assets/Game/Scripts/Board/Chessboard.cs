@@ -248,9 +248,9 @@ public class Chessboard : MonoBehaviourPun
     private ChessPiece SpawnSinglePiece(ChessPieceType type, int team, string name, int x, int y){
         ChessPiece cp = null;
         if(team == 0){
-            cp = PhotonNetwork.Instantiate("Pieces/" + whitePrefabs[(int)type - 1].name, transform.position, Quaternion.identity).GetComponent<ChessPiece>();
+            cp = PhotonNetwork.Instantiate("Pieces/" + whitePrefabs[(int)type - 1].name, GetTileMatrix(x,y), Quaternion.identity).GetComponent<ChessPiece>();
         } else{
-            cp = PhotonNetwork.Instantiate("Pieces/" + blackPrefabs[(int)type - 1].name, transform.position, Quaternion.identity).GetComponent<ChessPiece>();
+            cp = PhotonNetwork.Instantiate("Pieces/" + blackPrefabs[(int)type - 1].name, GetTileMatrix(x,y), Quaternion.identity).GetComponent<ChessPiece>();
         }
 
         int viewID = cp.gameObject.GetComponent<PhotonView>().ViewID;
